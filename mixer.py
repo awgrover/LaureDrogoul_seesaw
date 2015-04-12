@@ -6,7 +6,7 @@ import gst
 import pygtk, gtk
 
 def __get_pad_callback(dbin, pad, is_last):
-    print "  callback link %s -> %s" % (dbin, dbin.__want)
+    # print "  callback link %s -> %s" % (dbin, dbin.__want)
     pad.link(dbin.__want.get_pad('sink'))
 
 def append_pipe(pipe, name, element_name, properties):
@@ -15,17 +15,18 @@ def append_pipe(pipe, name, element_name, properties):
         element.set_property(k,v)
     pipe.add(element)
     if hasattr(pipe, '__previous'):
-        print "from %s -> %s" % (pipe.__previous.__class__.__name__, element.__class__)
-        print "Link %s -> %s" % (pipe.__previous,element)
+        # print "from %s -> %s" % (pipe.__previous.__class__.__name__, element.__class__)
+        # print "Link %s -> %s" % (pipe.__previous,element)
         # can't use instanceof() because the classes may not be loaded
         if pipe.__previous.__class__.__name__ == '__main__.GstDecodeBin' or pipe.__previous.__class__.__name__ == '__main__.GstDecodeBin2':
-            print "  dbin special link"
+            # print "  dbin special link"
             pipe.__previous.__want = element
             pipe.__previous.connect("new-decoded-pad", __get_pad_callback)
         else:
             pipe.__previous.link(element)
     else:
-        print "first for pipe %s : %s" % (pipe,element)
+        # print "first for pipe %s : %s" % (pipe,element)
+        pass
     pipe.__previous = element
     return element
 
@@ -61,9 +62,10 @@ def main():
     while(1):
         msg = bus.poll(gst.MESSAGE_ANY, -1)
         if msg.type != gst.MESSAGE_STATE_CHANGED:
-            print msg.type
+            # print msg.type
+            pass
         if msg.type == gst.MESSAGE_EOS:
-           print "--- EOS"
+           # print "--- EOS"
            # pipe,vol = do_file()
            pipe.set_state(gst.STATE_READY)
            pipe.set_state(gst.STATE_PLAYING)
@@ -77,36 +79,36 @@ def run_fade(setup):
         return False
 
     delta_vol = int(fade[0]*100 - vol.get_property('volume') * 100)
-    print "f1 %s, dnow %s" % (fade[1], (fade[1] - datetime.now()).total_seconds())
+    # print "f1 %s, dnow %s" % (fade[1], (fade[1] - datetime.now()).total_seconds())
     delta_msec = int((fade[1] - datetime.now()).total_seconds()*1000)
-    print "dv %s dm %s @ %s / %s" % (delta_vol, delta_msec, vol.get_property('volume'), datetime.now())
+    # print "dv %s dm %s @ %s / %s" % (delta_vol, delta_msec, vol.get_property('volume'), datetime.now())
     if delta_msec <= 0:
-        print "past %s, so set to %s at %s" % (delta_msec,fade[0],datetime.now())
+        # print "past %s, so set to %s at %s" % (delta_msec,fade[0],datetime.now())
         vol.set_property('volume', fade[0])
         fade = None
     elif int(fade[0]*100) == int(vol.get_property('volume') * 100):
-        print "there"
+        # print "there"
         fade = None
     if not fade:
-        print "no more"
+        # print "no more"
         return False
 
     step_vol = delta_vol / delta_msec
     if setup:
         step_msec = abs(delta_msec / delta_vol)
         if step_msec > 0:
-            print "Start w/msec interval %s" % step_msec
+            # print "Start w/msec interval %s" % step_msec
             gobject.timeout_add(step_msec, run_fade, None)
-            print "queued at %s" % datetime.now()
+            # print "queued at %s" % datetime.now()
             return
-        print "start w/1 interval"
+        # print "start w/1 interval"
         gobject.timeout_add(1, run_fade, None)
-        print "queued at %s" % datetime.now()
+        # print "queued at %s" % datetime.now()
         return
 
     if step_vol == 0:
         step_vol = +1
-    print '  adjust vol %s' % step_vol
+    # print '  adjust [%s] vol %s' % (sys.argv[1],step_vol)
     vol.set_property('volume', vol.get_property('volume') + step_vol/100.0)
     return True
 
@@ -124,10 +126,10 @@ def adjust_volume(io, why):
     if is_fade:
         perc = int(is_fade.group(1))
         msecs = int(is_fade.group(2))
-        print "fade to %s%% in %s msecs" % (perc,msecs)
-        print "from %s" % datetime.now()
+        # print "fade to %s%% in %s msecs" % (perc,msecs)
+        # print "from %s" % datetime.now()
         fade = [ perc/100.0, datetime.now() + timedelta(milliseconds=msecs) ]
-        print "to %s by %s"  % ( fade[0], fade[1])
+        # print "to %s by %s"  % ( fade[0], fade[1])
     if fade:
         run_fade(True)
 
