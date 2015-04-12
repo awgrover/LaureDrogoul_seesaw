@@ -139,9 +139,9 @@ def do_mic():
     ## Mic pipe
     micpipe = gst.Pipeline("micpipe")
     append_pipe(micpipe, 'mic', 'alsasrc',{})
-    append_pipe(micpipe, 'audioconvert', 'audioconvert', {})
+    # append_pipe(micpipe, 'audioconvert', 'audioconvert', {})
     mic_volume = append_pipe(micpipe, 'micvolume', 'volume', {})
-    append_pipe(micpipe, 'speaker', 'alsasink', {})
+    append_pipe(micpipe, 'speaker', 'alsasink', {'sync' : False})
     micpipe.set_state(gst.STATE_PLAYING)
     return micpipe,mic_volume
 
@@ -163,7 +163,8 @@ def note_signal(bus, message):
 
 def do_file():
     filepipe = gst.Pipeline("filepipe")
-    append_pipe(filepipe, 'testfile', 'filesrc', { 'location' : 'falling.wav' })
+    print "Play %s" % sys.argv[2]
+    append_pipe(filepipe, 'testfile', 'filesrc', { 'location' : sys.argv[2] })
     # file_player.connect("about-to-finish", do_file_again)
 
     append_pipe(filepipe, 'decodebin', 'decodebin2', {})
