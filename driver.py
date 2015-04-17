@@ -12,6 +12,8 @@ import subprocess
 from collections import deque
 from random import randint
 import RPi.GPIO as GPIO
+import os
+
 
 def debug(*x):
     msg = "[D] "
@@ -20,6 +22,13 @@ def debug(*x):
         msg += " "
     msg += "\n"
     sys.stderr.write(msg)
+
+if os.environ.get('DEBUG'):
+    def debug2(*x):
+        debug(*x)
+else:
+    def debug2(*x):
+        pass
 
 class Tilt(object):
     first_time = True
@@ -37,15 +46,14 @@ class Tilt(object):
         # open is pull-up, and "detect" is low
         self._went_on = False
         GPIO.add_event_detect(pin, GPIO.BOTH, callback=self.note_on, bouncetime=200)
-        debug("FIXME: setup tilt pin for '%s' on %s" % (self.name,self.pin))
 
     def note_on(self, pin):
         if GPIO.input(pin):
             if not self._went_on:
-                debug("Went on %s" % pin)
+                debug2("Went on %s" % pin)
             self._went_on = True
         else:
-            debug("Went off %s" % pin)
+            debug2("Went off %s" % pin)
             self._went_on = False
 
     def readpin(self):
@@ -112,10 +120,10 @@ class Attitude(Thread):
 
     def using_tilt(self):
         if self.tiltb.went_on():
-            debug("play is %s" % self.tiltb.name)
+            debug2("play is %s" % self.tiltb.name)
             Attitude.current = self.tiltb.name
         elif self.tilta.went_on():
-            debug("play is %s" % self.tilta.name)
+            debug2("play is %s" % self.tilta.name)
             Attitude.current = self.tilta.name
 
         time.sleep(0.300)
@@ -125,11 +133,11 @@ class Attitude(Thread):
         change = self.current_raw - self.tilt_point
         if change < 0:
             if self.current != 'b':
-                debug("TO B %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
+                debug2("TO B %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
                 self.__class__.current = 'b'
         elif change > 0:
             if self.current != 'a':
-                debug("TO A %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
+                debug2("TO A %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
                 self.__class__.current = 'a'
 
             
@@ -144,10 +152,9 @@ class AMixer(Thread):
         self.index = index
         debug("Launch: mixer.py %s '%s'" % (self.index, cli2))
         self.mixer_in = Popen(['python', './mixer.py', str(index), cli2 or ''], stdin=subprocess.PIPE).stdin
-        debug("  mixin %s" % self.mixer_in)
 
     def set_volume(self, to, taking):
-        debug("volume of %s [mixin %s] -> %s in %smsec" % (self.index, self.mixer_in, to, taking))
+        debug2("volume of %s [mixin %s] -> %s in %smsec" % (self.index, self.mixer_in, to, taking))
         self.mixer_in.write("%s %s\n" % (to, taking))
 
     def run(self):
@@ -157,10 +164,10 @@ class AMixer(Thread):
         while(True):
             if was != Attitude.current:
                 if Attitude.current == self.my_side:
-                    debug( "On idx %s: %s -> %s" % (self.index, was,Attitude.current))
+                    debug2( "On idx %s: %s -> %s" % (self.index, was,Attitude.current))
                     self.set_volume(self.my_vol,500)
                 else:
-                    debug( "Off idx %s: %s -> %s" % (self.index, was,Attitude.current))
+                    debug2( "Off idx %s: %s -> %s" % (self.index, was,Attitude.current))
                     self.set_volume(0,500)
                 was = Attitude.current
             time.sleep(0.300)
@@ -188,8 +195,12 @@ class RunFile(AMixer):
             return None
         
 def debug_thread_ct():
+    was = 0
     while (True):
-        debug("Threads:",threading.active_count())
+        isnow = threading.active_count()
+        if isnow != was:
+            debug("Threads:",isnow)
+            was=isnow
         time.sleep(5)
 
 def start_debug():

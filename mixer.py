@@ -121,7 +121,7 @@ def adjust_volume(io, why):
 
     global vol,fade
     input = sys.stdin.readline()
-    input.rstrip
+    input = input.rstrip()
     print "Adjust! [%s] g %s: %s" % (why, vol, input)
     is_fade = re.search('^([0-9]+)\s+([0-9]+)$', input)
     if is_fade:
@@ -134,7 +134,7 @@ def adjust_volume(io, why):
     if fade:
         run_fade(True)
 
-    print "volume: %s" % vol.get_property('volume')
+    # print "volume: %s" % vol.get_property('volume')
 
     return True
 
