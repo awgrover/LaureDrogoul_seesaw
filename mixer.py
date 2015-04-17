@@ -117,6 +117,7 @@ def adjust_volume(io, why):
     # reads: target taking
     # target is a 0-100 percent (can overdrive!)
     # taking is msecs for the fade
+    # why is the event
 
     global vol,fade
     input = sys.stdin.readline()
