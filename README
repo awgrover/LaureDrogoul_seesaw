@@ -1,0 +1,8 @@
+raspberrypi code for a seesaw: tilt-switch pair, and adafruit LSM9DS0
+
+Call the ends 'a' and 'b'.
+
+When 'a' is down, play a sound.
+When 'b' is down, play the mic.
+
+The sound is $HOME/fun/seesawsound.wav
