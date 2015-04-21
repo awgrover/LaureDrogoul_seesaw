@@ -25,7 +25,7 @@ def debug(*x):
 
 if os.environ.get('DEBUG'):
     def debug2(*x):
-        debug(2,*x)
+        debug(*x)
 else:
     def debug2(*x):
         pass
@@ -101,9 +101,6 @@ class Simplemovingaverage():
  
         return self.average
     
-from smbus import SMBus
-from my_LSM9DS0 import LSM9DS0
-
 class Attitude(Thread):
     start_val = 'b' # b is the sound file
     current = start_val
@@ -113,15 +110,13 @@ class Attitude(Thread):
     tilta = Tilt(14, 'a') # means, on when 'a' is down
     tiltb = Tilt(15, 'b')
     tilt_point = 1000
-    lsm = LSM9DS0(SMBus(1))
 
     def run(self):
         debug("Start tracking attitude")
         self.ma = Simplemovingaverage(10)
-        Thread(None,self.lsm.update).start()
         while(True):
-            self.using_gyro()
-            # self.using_tilt()
+            # self.using_gyro()
+            self.using_tilt()
 
     def using_tilt(self):
         if self.tiltb.went_on():
@@ -136,7 +131,6 @@ class Attitude(Thread):
     def using_gyro(self):
         self.__class__.current_raw = self.ma(self.readval())
         change = self.current_raw - self.tilt_point
-        debug2("gyro @ %s delta %s" % (self.current_raw, change))
         if change < 0:
             if self.current != 'b':
                 debug2("TO B %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
@@ -149,7 +143,7 @@ class Attitude(Thread):
             
 
     def readval(self):
-       return int(self.lsm.accel[0])/10 # x, lsd is noisy
+       return self.current_raw + (randint(1,5) - 3) * 10
 
 class AMixer(Thread):
     my_vol = 100
@@ -214,13 +208,16 @@ def start_debug():
     debug("Starting start_debug")
 
 def start_self_calibration():
+    debug("no calibration, using tilt")
+    return
     debug("Begin self-calibration")
     while(True):
         for atilt in (Attitude.tilta, Attitude.tiltb):
             if atilt.went_on():
-                atilt += Attitude.current_raw # calcs average, used by attitude
-                debug("Update %s: %s -> %s" % (atilt.name, Attitude.current_raw, atilt.average()))
-                Attitude.tilt_point = (Attitude.tilta.average() + Attitude.tiltb.average()) /2
+                pass
+                # atilt += Attitude.current_raw # calcs average, used by attitude
+                # debug("Update %s: %s -> %s" % (atilt.name, Attitude.current_raw, atilt.average()))
+                # Attitude.tilt_point = (Attitude.tilta.average() + Attitude.tiltb.average()) /2
         time.sleep(.01)
         
 def main():
