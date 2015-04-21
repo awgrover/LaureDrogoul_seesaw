@@ -23,7 +23,7 @@ def debug(*x):
     msg += "\n"
     sys.stderr.write(msg)
 
-if os.environ.get('DEBUG'):
+if os.environ.get('DEBUG') == '2':
     def debug2(*x):
         debug(2,*x)
 else:
@@ -122,6 +122,7 @@ class Attitude(Thread):
         while(True):
             self.using_gyro()
             # self.using_tilt()
+            time.sleep(0.01)
 
     def using_tilt(self):
         if self.tiltb.went_on():
@@ -130,8 +131,6 @@ class Attitude(Thread):
         elif self.tilta.went_on():
             debug2("play is %s" % self.tilta.name)
             Attitude.current = self.tilta.name
-
-        time.sleep(0.300)
 
     def using_gyro(self):
         self.__class__.current_raw = self.ma(self.readval())
@@ -145,8 +144,6 @@ class Attitude(Thread):
             if self.current != 'a':
                 debug2("TO A %s vs %s +- %s" % (self.current_raw, self.tilt_point, change))
                 self.__class__.current = 'a'
-
-            
 
     def readval(self):
        return int(self.lsm.accel[0])/10 # x, lsd is noisy
@@ -171,12 +168,12 @@ class AMixer(Thread):
             if was != Attitude.current:
                 if Attitude.current == self.my_side:
                     debug2( "On idx %s: %s -> %s" % (self.index, was,Attitude.current))
-                    self.set_volume(self.my_vol,500)
+                    self.set_volume(self.my_vol,100)
                 else:
                     debug2( "Off idx %s: %s -> %s" % (self.index, was,Attitude.current))
-                    self.set_volume(0,500)
+                    self.set_volume(0,100)
                 was = Attitude.current
-            time.sleep(0.300)
+            time.sleep(0.05)
 
 class RunMic(AMixer):
     my_index = 1
@@ -199,8 +196,20 @@ class RunFile(AMixer):
         else:
             sys.stderr.write("No sound: no extant seesawsound.wav, no argv[1]\n")
             return None
-        
+
+class RunFile_A(RunFile):
+    my_index = 1
+    my_side = 'a'
+
+    def find_file(self):
+        if os.path.isfile("seesawsound2.wav"):
+            return "seesawsound2.wav"
+        else:
+            sys.stderr.write("No sound: no extant seesawsound2.wav, no argv[1]\n")
+            return None
+
 def debug_thread_ct():
+    # log thread ct
     was = 0
     while (True):
         isnow = threading.active_count()
@@ -226,7 +235,8 @@ def start_self_calibration():
 def main():
     start_debug()
 
-    RunMic(name= 'mic').start() # starts off, monitors attitude
+    # RunMic(name= 'mic').start() # starts off, monitors attitude
+    RunFile_A(name='filea').start()
     RunFile(name='file').start() # starts on, monitors attitude
 
     Thread(None, start_self_calibration, 'self_calibration').start() # messes with horiz reference
