@@ -1,0 +1,18 @@
+#/bin/bash
+# run as sudo on the pi
+# arguments: 1..n, the hostname name number, e.g. raspberrypi1...
+if [ "$1" == '' ]; then
+    echo "Need a number for the hostname, 1..n" > /dev/stderr
+    exit 2
+fi
+
+hname="raspberrypi"$1
+
+# hostname
+hostname $hname
+sed -i -e '/raspberrypi/ d' -e "a 127.0.1.1 $hname" /etc/hosts
+
+# startup service
+grep seesaw /etc/rc.local || \
+sed -i 'a (cd ~pi/fun && ./driver.py ) 2>&1 | logger -t seesaw&' /etc/rc.local
+
