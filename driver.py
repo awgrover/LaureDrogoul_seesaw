@@ -197,9 +197,13 @@ class RunFile(AMixer):
             sys.stderr.write("No sound: no extant seesawsound.wav, no argv[1]\n")
             return None
 
-class RunFile_A(RunFile):
-    my_index = 1
+class RunFile_A(AMixer):
+    my_index = 2
     my_side = 'a'
+
+    def launch_mixer(self, index):
+        debug("Launch %s mixer" % self.__class__)
+        super(self.__class__, self).launch_mixer(index, self.find_file())
 
     def find_file(self):
         if os.path.isfile("seesawsound2.wav"):
