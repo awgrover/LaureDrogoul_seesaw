@@ -6,3 +6,7 @@ When 'a' is down, play a sound.
 When 'b' is down, play the mic.
 
 The sound is $HOME/fun/seesawsound.wav
+
+Startup was /etc/rc.local +
+(cd ~pi/fun && ./driver.py ) 2>&1 | logger -t seesaw&
+
