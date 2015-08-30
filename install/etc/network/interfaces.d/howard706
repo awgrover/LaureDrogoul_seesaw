@@ -1,0 +1,3 @@
+iface wlan0 inet dhcp
+    wpa-ssid "howard706"
+    wpa-psk "abracadabra"

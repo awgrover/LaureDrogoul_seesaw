@@ -1,0 +1,22 @@
+#!/bin/bash
+# puts it in place, asks to restart networking
+# --- which
+set -e
+if [[ ! -e $1 && ! -e $1.conf ]]; then
+	echo "No such $1"
+	exit 1
+fi
+for x in `/bin/ls *.conf 2>/dev/null`; do
+	mv $x `basename $x .conf`
+done
+mv $1 $1.conf
+echo "Using: "
+/bin/ls *.conf
+
+read -p "Restart network [no or Y]" yesm
+if [ "$yesm" == "Y" ];  then
+	service networking restart
+else
+	echo "No network restart, do it yourself"
+	echo "service networking reload"
+fi

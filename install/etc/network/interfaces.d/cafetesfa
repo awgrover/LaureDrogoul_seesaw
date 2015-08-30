@@ -1,0 +1,5 @@
+iface wlan0 inet dhcp
+#    wpa-ssid "auger"
+#    wpa-psk "vockiatedeckyijuichue"
+    wpa-ssid "CafeTesfa"
+    wpa-psk "thanksalatte"
