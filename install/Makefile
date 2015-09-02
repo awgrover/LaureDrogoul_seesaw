@@ -18,6 +18,7 @@ editntarify : check $(sources) Makefile edit tarify
 	@echo "---"; echo "DO THIS:"
 	@echo "scp rp$(PI).tar raspberrypi$(PI).local:"
 	@echo "ssh raspberrypi$(PI).local"; echo "sudo su"; echo "cd"; echo "(cd / && tar xf ~pi/rp$(PI).tar)"
+	@echo "apt-get update"
 	@echo "make setup"
 
 .PHONY : check
