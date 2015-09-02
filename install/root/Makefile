@@ -1,7 +1,7 @@
 rcdirs := $(shell /bin/ls -d /etc/rc?.d | grep -v rcS.d)
-edits := /etc/network/interfaces /etc/dhcp/dhcpd.conf /etc/shadow /etc/xrdp/startwm.sh
+edits := /etc/network/interfaces /etc/dhcp/dhcpd.conf /etc/shadow
 tarpayload := $(shell tar tf rp?.tar | sort -u)
-packages_needed := $(shell dpkg-query --show -f '${db:Status-Abbrev} ${Package}\n' isc-dhcp-server tightvncserver xrdp | egrep '^un' | awk '{print $2}')
+packages_needed := $(shell dpkg-query --show -f '${db:Status-Abbrev} ${Package}\n' isc-dhcp-server tightvncserver | egrep '^un' | awk '{print $2}')
 
 .PHONY : setup
 setup : packages $(edits) /home/pi/.vnc/passwd /etc/shadow $(rcdirs) 
@@ -22,10 +22,6 @@ $(rcdirs): /etc/init.d/tightvnc
 	chmod ug+x /etc/init.d/tightvnc
 	update-rc.d tightvnc defaults
 	service tightvnc start
-
-/etc/xrdp/startwm.sh : Makefile
-	sed -i.bak '/^\. / s/^/#/' $@
-	egrep '^x-window-manager' 2>/dev/null || echo 'x-window-manager --startup /usr/bin/pcmanfm' >> $@
 
 /etc/network/interfaces : Makefile
 	sed -i.bak '/wlan0/ d' $@
