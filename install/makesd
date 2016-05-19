@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+dev=$1
+
+img=2015-02-16-raspbian-wheezy.img
+if [ ! -e $img ]; then
+    echo "There is no (assumed img) $img"
+    exit 1
+fi
+
+if [ "$1" == "" ]; then
+    # it was...
+    dev=/dev/mmcblk0
+fi
+
+if [ ! -e $dev ]; then
+    echo "Expected a device for the ssd, but '$dev' isn't there"
+    exit 1
+fi
+
+if [ "$OK" == '' ]; then
+    lsblk -f $dev
+    echo -n "We are going to rewrite the entire device, ok? yN: "
+    read ok
+    if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
+        echo "aborted"
+        exit 2
+    fi
+fi
+
+if [ $UID != 0 ]; then
+    sudo -p 'sudo for disk ops, passwd: ' env OK=1 $0 $dev
+    exit $?
+fi
+
+echo "rooting.."
+
+if mount -l | grep $dev >/dev/null; then
+    echo "unmounting..."
+    lsblk -l -n -o NAME | xargs --no-run-if-empty -n 1 -ix umount /dev/x
+fi
+
+args="dd status=progress bs=4M if=$img of=$dev"
+echo
+echo $args
+echo -n "Confirm that yN: "
+read ok
+if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
+    echo "aborted"
+    exit 2
+fi
+$args
+lsblk -f /dev/mmcblk0
+
+# Mount
+
+rootfs=/dev/`lsblk -l -o NAME,FSTYPE,TYPE -n $dev | egrep -v ' vfat| disk' | awk '{print $1}'`
+dir=/mnt/pimnt
+mkdir -p $dir
+mount $rootfs $dir
+lsblk -f $dev

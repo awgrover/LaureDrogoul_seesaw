@@ -1,4 +1,6 @@
-sources := $(shell find `find . -maxdepth 1 -type d | egrep -v '^\.$$'` -type f )
+# internal invocations:
+# env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
+sources := $(shell find etc root -type f )
 SHELL := /bin/bash
 
 all : rp1.tar rp2.tar
@@ -20,6 +22,11 @@ editntarify : check $(sources) Makefile edit tarify
 	@echo "ssh raspberrypi$(PI).local"; echo "sudo su"; echo "cd"; echo "(cd / && tar xf ~pi/rp$(PI).tar)"
 	@echo "apt-get update"
 	@echo "make setup"
+
+.PHONY : copy_to_sd
+copy_to_sd : check $(sources) edit tarify
+	@if [ "$$SDROOTFS" == '' ]; then echo "Expected SDROOTFS"; exit 1; fi
+	cd $$SDROOTFS && tar xf $(CURDIR)/rp$(PI).tar
 
 .PHONY : check
 check :
