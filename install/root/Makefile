@@ -1,11 +1,37 @@
 rcdirs := $(shell /bin/ls -d /etc/rc?.d | grep -v rcS.d)
 tarpayload := $(shell tar tf rp?.tar | sort -u)
-packages_needed := $(shell dpkg-query --show -f '${db:Status-Abbrev} ${Package}\n' isc-dhcp-server tightvncserver | egrep '^un' | awk '{print $2}')
+packages_needed := $(shell dpkg-query --show -f '${db:Status-Abbrev} ${Package}\n' isc-dhcp-server tightvncserver python-smbus i2c-tools gstreamer1.0-tools gstreamer0.10-alsa python-gst0.10 python-gtk2 gstreamer0.10-plugins-good:armhf avahi-daemon libnss-mdns xrdp | egrep '^un' | awk '{print $2}')
 
 .PHONY : setup
-setup : /etc/shadow /etc/network/interfaces /etc/dhcp/dhcpd.conf wifi packages /home/pi/.vnc/passwd $(rcdirs) 
+setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces /etc/dhcp/dhcpd.conf wifi /etc/ssh/sshd_config packages /home/pi/.vnc/passwd $(rcdirs) /etc/modprobe.d/alsa-base.conf /etc/rc.local /etc/logrotate.d/rsyslog /etc/modules /boot/config.txt
 	@echo "cd /etc/network/interfaces.d" echo "./pick *something*"
+	@echo "Wants to reboot (if alsa-base was edited"
+	@echo "Wants to reboot to start everything up"
 
+
+/etc/hosts : Makefile
+	hname=`hostname` sed -i -e '/raspberrypi/ d' -e "a 127.0.1.1 $$hname" /etc/hosts
+
+/home/pi : Makefile
+	adduser --home /home/pi --no-create-home pi
+
+.PHONY : /home/pi/.ssh
+/home/pi/.ssh : /home/pi Makefile
+	chown pi.pi $@
+	chmod -R 660 $@
+	chmod 770 $@
+
+/boot/config.txt : Makefile
+	sed -i 'a dtparam=i2c1=on' /boot/config.txt
+
+/etc/modules : Makefile
+	sed -i -e 'a i2c-bcm2708' -e 'a i2c-dev' /etc/modules
+
+/etc/logrotate.d/rsyslog : Makefile
+	sed -i '/daily/ i size 1M' /etc/logrotate.d/rsyslog
+
+/etc/rc.local : Makefile
+	sed -i '/exit 0/ i (cd ~pi/fun && ./driver.py |& logger -t seesaw)&' /etc/rc.local
 
 /home/pi/.vnc/passwd : Makefile
 	mkdir -p `dirname $@`
@@ -30,6 +56,12 @@ $(rcdirs): /etc/init.d/tightvnc
 	sed -i.bak '/^subnet 192\.168\.99\.0 /,99 d' $@
 	cat $< >> $@
 
+/etc/modprobe.d/alsa-base.conf : Makefile
+	sed -i.was '/snd-usb-audio/ s/-2/0/' /etc/modprobe.d/alsa-base.conf
+
+/etc/ssh/sshd_config : Makefile
+	echo "UseDNS no" >> /etc/ssh/sshd_config && service ssh restart
+
 .PHONE : wifi
 wifi :
 	service networking restart	
@@ -39,3 +71,4 @@ wifi :
 packages :
 	apt-get update
 	if [ "$(packages_needed)" != '' ]; then apt-get install $(packages_needed); fi
+	easy_install-pypy pygst

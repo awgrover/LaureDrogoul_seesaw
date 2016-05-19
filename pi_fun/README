@@ -2,10 +2,9 @@ raspberrypi code for a seesaw: tilt-switch pair, and adafruit LSM9DS0
 
 Call the ends 'a' and 'b'.
 
-When 'a' is down, play a sound.
-When 'b' is down, play the mic.
+When 'a' is down, play a sound, $HOME/fun/seesawsound2.wav.
+When 'b' is down, play the other sound, .../seesawsound.wav.
 
-The sound is $HOME/fun/seesawsound.wav
 
 Startup was /etc/rc.local +
 (cd ~pi/fun && ./driver.py ) 2>&1 | logger -t seesaw&

@@ -1,6 +1,7 @@
 # internal invocations:
 # env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
-sources := $(shell find etc root -type f )
+source_dirs :=etc root
+sources := $(shell find $(source_dirs) -type f )
 SHELL := /bin/bash
 
 all : rp1.tar rp2.tar
@@ -39,5 +40,9 @@ tarify : $(sources) Makefile
 
 .PHONY : edit
 edit :  $(sources) Makefile
+	cp -pr ../pi_fun home/pi/fun
+	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
+	cd home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav
 	sed -i -e '/ wireless-essid / s/Pi./Pi$(PI)/' -e '/ address / s/[^.]\+$$/$(PI)/' etc/network/interfaces.d/adhocpi
 	if [ "$$WIFI" != '' ]; then mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; fi
+	echo raspberrypi$$PI > etc/hostname
