@@ -59,3 +59,12 @@ dir=/mnt/pimnt
 mkdir -p $dir
 mount $rootfs $dir
 lsblk -f $dev
+
+echo -n "Which pi: 1|2 "
+read pi
+
+wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
+echo -n "Which wifi at first boot: $wificonf ? "
+read wifi
+
+env PI=$pi SDROOTFS=$dir WIFI=$wifi make copy_to_sd

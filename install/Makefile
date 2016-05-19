@@ -40,3 +40,4 @@ tarify : $(sources) Makefile
 .PHONY : edit
 edit :  $(sources) Makefile
 	sed -i -e '/ wireless-essid / s/Pi./Pi$(PI)/' -e '/ address / s/[^.]\+$$/$(PI)/' etc/network/interfaces.d/adhocpi
+	if [ "$$WIFI" != '' ]; then mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; fi
