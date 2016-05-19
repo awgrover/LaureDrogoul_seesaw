@@ -1,10 +1,9 @@
 rcdirs := $(shell /bin/ls -d /etc/rc?.d | grep -v rcS.d)
-edits := /etc/network/interfaces /etc/dhcp/dhcpd.conf /etc/shadow
 tarpayload := $(shell tar tf rp?.tar | sort -u)
 packages_needed := $(shell dpkg-query --show -f '${db:Status-Abbrev} ${Package}\n' isc-dhcp-server tightvncserver | egrep '^un' | awk '{print $2}')
 
 .PHONY : setup
-setup : packages $(edits) /home/pi/.vnc/passwd /etc/shadow $(rcdirs) 
+setup : /etc/shadow /etc/network/interfaces /etc/dhcp/dhcpd.conf wifi packages /home/pi/.vnc/passwd $(rcdirs) 
 	@echo "cd /etc/network/interfaces.d" echo "./pick *something*"
 
 
@@ -25,12 +24,18 @@ $(rcdirs): /etc/init.d/tightvnc
 
 /etc/network/interfaces : Makefile
 	sed -i.bak '/wlan0/ d' $@
-	egrep '^source' 2>/dev/null || echo 'source /etc/network/interfaces.d/*.conf' >> $@
+	egrep '^source' $@ 2>/dev/null || echo 'source /etc/network/interfaces.d/*.conf' >> $@
 
 /etc/dhcp/dhcpd.conf : edits/dhcpd.conf Makefile
 	sed -i.bak '/^subnet 192\.168\.99\.0 /,99 d' $@
 	cat $< >> $@
 
+.PHONE : wifi
+wifi :
+	service networking restart	
+	bash -c "while ! ip route list | grep 'default via'; do sleep 1; if (( SECONDS > 60 )); then exit 1; fi; done"
+
 .PHONY : packages
 packages :
+	apt-get update
 	if [ "$(packages_needed)" != '' ]; then apt-get install $(packages_needed); fi
