@@ -35,13 +35,20 @@ check :
 	echo Make: $$PI
 
 .PHONY : tarify
-tarify : $(sources) Makefile
-	tar cf rp$(PI).tar $(sources)
+tarify : $(source_dirs) Makefile
+	tar cf rp$(PI).tar $(sources_dirs)
+
+# Especially after copy_to_sd (: edit)
+.PHONE : clean
+clean : 
+	git checkout HEAD etc/network/interfaces.d
+	cd ..; git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
 
 .PHONY : edit
 edit :  $(sources) Makefile
 	cp -pr ../pi_fun home/pi/fun
 	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
+	cd home/pi/fun; rm 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 	cd home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav
 	sed -i -e '/ wireless-essid / s/Pi./Pi$(PI)/' -e '/ address / s/[^.]\+$$/$(PI)/' etc/network/interfaces.d/adhocpi
 	if [ "$$WIFI" != '' ]; then mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; fi
