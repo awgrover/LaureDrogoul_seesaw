@@ -47,8 +47,8 @@ clean :
 .PHONY : edit
 edit :  $(sources) Makefile
 	cp -pr ../pi_fun home/pi/fun
-	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
 	cd home/pi/fun; rm 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
+	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
 	cd home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav
 	sed -i -e '/ wireless-essid / s/Pi./Pi$(PI)/' -e '/ address / s/[^.]\+$$/$(PI)/' etc/network/interfaces.d/adhocpi
 	if [ "$$WIFI" != '' ]; then mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; fi
