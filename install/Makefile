@@ -1,6 +1,6 @@
 # internal invocations:
 # env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
-source_dirs :=etc root
+source_dirs :=etc root home
 sources := $(shell find $(source_dirs) -type f )
 SHELL := /bin/bash
 
