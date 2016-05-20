@@ -43,6 +43,7 @@ tarify : $(source_dirs) Makefile
 clean : 
 	git checkout HEAD etc/network/interfaces.d
 	cd ..; git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
+	cd home/pi/fun; rm -f 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 
 .PHONY : edit
 edit :  $(sources) Makefile
