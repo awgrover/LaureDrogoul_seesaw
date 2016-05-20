@@ -36,7 +36,7 @@ check :
 
 .PHONY : tarify
 tarify : $(source_dirs) Makefile
-	tar cf rp$(PI).tar $(sources_dirs)
+	tar cf rp$(PI).tar $(source_dirs)
 
 # Especially after copy_to_sd (: edit)
 .PHONE : clean
