@@ -71,7 +71,7 @@ echo -n "Which pi: 1|2 "
 read pi
 
 # remove old wifi picks
-(cd ..; sudo -u `stat -c '%U' .` git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
+git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm
 
 wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
 echo -n "Which wifi at first boot: $wificonf ? "
