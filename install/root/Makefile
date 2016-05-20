@@ -14,10 +14,11 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces /etc/dhcp/d
 
 /home/pi : Makefile
 	adduser --home /home/pi --no-create-home pi
+	chown -R pi.pi /home/pi
 
 .PHONY : /home/pi/.ssh
 /home/pi/.ssh : /home/pi Makefile
-	chown pi.pi $@
+	chown -R pi.pi $@
 	chmod -R 660 $@
 	chmod 770 $@
 
