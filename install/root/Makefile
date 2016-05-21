@@ -42,7 +42,7 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/s
 
 .PHONY : /etc/rc.local 
 /etc/rc.local : 
-	grep driver.py $@ || sed -i '/exit 0/ i (cd ~pi/fun && ./driver.py |& logger -t seesaw)&' $@
+	grep driver.py $@ || sed -i '/exit 0/ i (echo "start seesaw..."; cd ~pi/fun && ./driver.py 2>&1 | logger -t seesaw)&' $@
 
 .PHONY : /home/pi/.vnc/passwd
 /home/pi/.vnc/passwd : /home/pi
