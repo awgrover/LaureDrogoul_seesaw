@@ -4,7 +4,7 @@ rcdirs := $(shell /bin/ls -d /etc/rc?.d | grep -v rcS.d)
 packages_needed := isc-dhcp-server tightvncserver python-smbus i2c-tools gstreamer1.0-tools gstreamer0.10-alsa python-gst0.10 python-gtk2 gstreamer0.10-plugins-good:armhf avahi-daemon libnss-mdns xrdp
 
 .PHONY : setup
-setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/sshd_config packages /home/pi/.vnc/passwd $(rcdirs) /etc/modprobe.d/alsa-base.conf /etc/rc.local /etc/logrotate.d/rsyslog /etc/modules /boot/config.txt
+setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/sshd_config packages /etc/init.d/tightvnc /etc/modprobe.d/alsa-base.conf /etc/rc.local /etc/logrotate.d/rsyslog /etc/modules /boot/config.txt
 	@echo "cd /etc/network/interfaces.d" echo "./pick *something*"
 	@echo "Wants to reboot (if alsa-base was edited"
 	@echo "Wants to reboot to start everything up"
@@ -15,7 +15,7 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/s
 
 .PHONY : /etc/hosts
 /etc/hosts :
-	grep raspberrypi $@ || hname=`hostname` sed -i -e '/raspberrypi/ d' -e "a 127.0.1.1 $$hname" /etc/hosts
+	grep raspberrypi $@ || (hname=`hostname`; sed -i -e '/raspberrypi/ d' -e "$$ a 127.0.1.1 $$hname" /etc/hosts)
 
 .PHONY : /home/pi
 /home/pi :
@@ -34,7 +34,7 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/s
 
 .PHONY : /etc/modules
 /etc/modules :
-	grep i2c-bcm2708 $@ || sed -i -e '$$ a i2c-bcm2708' -e 'a i2c-dev' $@
+	grep i2c-bcm2708 $@ || sed -i -e '$$ a i2c-bcm2708' -e '$$ a i2c-dev' $@
 
 .PHONY : /etc/logrotate.d/rsyslog
 /etc/logrotate.d/rsyslog :
@@ -44,25 +44,32 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/s
 /etc/rc.local : 
 	grep driver.py $@ || sed -i '/exit 0/ i (cd ~pi/fun && ./driver.py |& logger -t seesaw)&' $@
 
-/home/pi/.vnc/passwd
+.PHONY : /home/pi/.vnc/passwd
+/home/pi/.vnc/passwd : /home/pi
 	mkdir -p `dirname $@`
-	grep $(pipasswd) $@ || echo $(pipasswd) | su pi vncpasswd -f > $@
 	chown -R pi.pi `dirname $@`
+	@# replaces, so idempotent enough
+	(echo $(pipasswd) | sudo -u pi vncpasswd -f > $@)
 	chmod 600 $@
 
 .PHONY : /etc/shadow 
 /etc/shadow : 
 	(echo $(pipasswd); echo $(pipasswd)) | passwd pi
 
-$(rcdirs): /etc/init.d/tightvnc
-	ps -C Xtightvnc && service tightvnc stop
+.PHONY : rcdirs
+rcdirs : 
+	echo $(rcdirs)
+
+.PHONY : /etc/init.d/tightvnc
+/etc/init.d/tightvnc : /home/pi/.vnc/passwd
+	ps -C Xtightvnc && service tightvnc stop || true
 	chmod ug+x /etc/init.d/tightvnc
 	update-rc.d tightvnc defaults
 	service tightvnc start
 
 .PHONY : /etc/network/interfaces
 /etc/network/interfaces :
-	grep wlan $@ && sed -i.bak '/wlan0/ d' $@
+	grep wlan $@ && sed -i.bak '/wlan0/ d' $@ || true
 	egrep '^source' $@ 2>/dev/null || echo 'source /etc/network/interfaces.d/*.conf' >> $@
 
 # disabled, confuses eth0. after packages maybe
@@ -80,7 +87,7 @@ $(rcdirs): /etc/init.d/tightvnc
 
 .PHONY : /etc/ssh/sshd_config
 /etc/ssh/sshd_config :
-	grep "UseDNS no' $@ || (echo "UseDNS no" >> $@ && service ssh restart)
+	grep 'UseDNS no' $@ || (echo "UseDNS no" >> $@ && service ssh restart)
 
 # Disabled till wifi/dhcp/avahi figured out again
 # after packages...
