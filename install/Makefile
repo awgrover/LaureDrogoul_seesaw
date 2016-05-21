@@ -30,6 +30,9 @@ copy_to_sd : check $(sources) edit tarify
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$(PI).tar
 	chmod 774 $$SDROOTFS/etc/config_once.conf
 	chown 0.0 $$SDROOTFS/etc/config_once.conf
+	chown -R 0.0 $$SDROOTFS/etc/avahi
+	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
+	find $$SDROOTFS/etc/avahi -type f | xargs chmod 644
 
 .PHONY : check
 check :
