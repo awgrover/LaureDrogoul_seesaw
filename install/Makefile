@@ -28,6 +28,8 @@ editntarify : check $(sources) Makefile edit tarify
 copy_to_sd : check $(sources) edit tarify
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected SDROOTFS"; exit 1; fi
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$(PI).tar
+	chmod 774 $$SDROOTFS/etc/config_once.conf
+	chown 0.0 $$SDROOTFS/etc/config_once.conf
 
 .PHONY : check
 check :

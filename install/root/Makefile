@@ -10,6 +10,8 @@ setup : /home/pi/.ssh /etc/shadow /etc/hosts /etc/network/interfaces  /etc/ssh/s
 	@echo "Wants to reboot to start everything up"
 
 
+# the pi wants you to run raspi-config. can't run it non-interactive though!
+
 # All these "edits" are .phony because I don't have anything to depend-on
 # So, always run them but make them idempotent
 
