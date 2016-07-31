@@ -7,6 +7,7 @@
 img=2015-02-16-raspbian-wheezy.img
 
 set -e
+set -x
 
 if [ ! -e $img ]; then
     echo "There is no (assumed img) $img"
@@ -34,10 +35,7 @@ if [ $UID != 0 ]; then
     echo -n "Which pi: 1|2 "
     read pi
 
-    # remove old wifi picks (i.e. any not added to git)
-    echo "Removing non-git etc/network/interfaces.d..."
-    (cd ..; sudo -u `stat -c '%U' .` git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
-
+    exit 1
     # Choose the 
     wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
     echo -n "Which wifi at first boot: $wificonf ? "
@@ -67,7 +65,7 @@ if [ "$init" == "--init" ]; then
     # unmount before dd
     if mount -l | grep $dev >/dev/null; then
         echo "unmounting..."
-        lsblk -l -n -o NAME | xargs --no-run-if-empty -n 1 -ix umount /dev/x
+        lsblk -l -n -o NAME $dev | xargs --no-run-if-empty -n 1 -ix umount /dev/x
     fi
 
     # copy image
