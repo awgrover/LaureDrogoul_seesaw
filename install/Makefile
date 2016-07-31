@@ -92,6 +92,7 @@ tarify : $(source_dirs) Makefile
 .PHONE : clean
 clean : 
 	rm -rf build
+	@echo "You must 'rm' the tar of interest"
 
 # OBS
 # Sadly, I'm editing the sources, I should make a copy in a "build/"
