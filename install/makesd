@@ -69,7 +69,7 @@ if [ "$init" == "--init" ]; then
     fi
 
     # copy image
-    args="dd bs=4M if=$img of=$dev"
+    args="dd status=progress bs=4M if=$img of=$dev"
     echo
     echo $args
     echo -n "Confirm that yN: "
@@ -83,7 +83,6 @@ if [ "$init" == "--init" ]; then
     # should show more info
     lsblk -f /dev/mmcblk0
 fi
-
 
 # Mount
 
