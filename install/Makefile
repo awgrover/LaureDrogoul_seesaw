@@ -12,7 +12,7 @@ all : rp1.tar rp2.tar rp3.tar
 
 # rp%.tar : $(sources) Makefile
 rp%.tar : build/rp% Makefile
-	tar cf -c $< rp$*.tar .
+	tar cf -C $< rp$*.tar .
 
 # Copy the source_dirs and edit them
 # (might not use actual currentfiles/ if the source_dirs have a newer!)
