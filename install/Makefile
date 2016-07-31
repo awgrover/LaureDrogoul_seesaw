@@ -17,6 +17,7 @@ rp%.tar : build/rp% Makefile
 
 # Copy the source_dirs and edit them
 # (might not use actual currentfiles/ if the source_dirs have a newer!)
+.PRECIOUS : build/rp%
 build/rp% : $(sources) ../currentfiles/2* ../currentfiles/1* Makefile
 	# clean $@
 	if [ -e $@ ]; then rm -rf $@; fi
