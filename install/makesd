@@ -15,7 +15,7 @@ fi
 
 init=''
 if [ "$1" == "--init" ]; then
-    init=1
+    init='--init'
     shift
 fi
 
@@ -34,13 +34,13 @@ fi
 
 if [ $UID != 0 ]; then
     # rerun ourselves with env OK, as sudo
-    sudo -p 'sudo for disk ops, passwd: ' $0 $dev
+    sudo -p 'sudo for disk ops, passwd: ' $0 $init $dev
     exit $?
 fi
 
 echo "rooting.."
 
-if [ "$init" == "1" ]; then
+if [ "$init" == "--init" ]; then
     # right device?
     lsblk -f $dev
     echo -n "We are going to rewrite the entire device, ok? yN: "
