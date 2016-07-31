@@ -54,7 +54,7 @@ echo "rooting.."
 if [ "$init" == "--init" ]; then
     # right device?
     lsblk -f $dev
-    sfdisk -l $dev | & egrep '^/dev'
+    sfdisk -l $dev 2>&1 | egrep '^/dev'
     echo -n "We are going to rewrite the entire device, ok? yN: "
     read ok
     if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
@@ -88,7 +88,7 @@ fi
 # Mount
 
 # Try to find the subdev to mount
-rootfs=`sfdisk -l $dev |& egrep '^/dev' | egrep ' Linux$' | awk '{print $1}'`
+rootfs=`sfdisk -l $dev 2>&1 | egrep '^/dev' | egrep ' Linux$' | awk '{print $1}'`
 if [ "$rootfs" == '' ]; then
     echo "Couldn't deduce the sub-device of $dev";
     exit 1
@@ -109,5 +109,5 @@ lsblk -f $dev
 # Configure
 
 { set -x
-env SDROOTFS=$dir WIFI=$wifi make config_sd$PI
+env SDROOTFS=$dir make config_sd$PI
 }
