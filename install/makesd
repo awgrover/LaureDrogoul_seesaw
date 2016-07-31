@@ -45,7 +45,7 @@ if [ $UID != 0 ]; then
     # Need to be root for the rest
 
     # rerun ourselves with env OK, as sudo
-    sudo -p 'sudo for disk ops, passwd: ' env PI=$pi $0 $init $dev
+    sudo -p 'sudo for disk ops, passwd: ' env WIFI=$WIFI PI=$pi $0 $init $dev
     exit $?
 fi
 
@@ -109,5 +109,5 @@ lsblk -f $dev
 # Configure
 
 { set -x
-env SDROOTFS=$dir make config_sd$PI
+env WIFI=$WIFI SDROOTFS=$dir make config_sd$PI
 }
