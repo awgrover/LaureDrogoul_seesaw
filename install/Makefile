@@ -72,10 +72,10 @@ config_sd% : $(SDROOTFS) rp%.tar
 	@if [ ! -e $$SDROOTFS/etc/passwd ]; then echo "Expected at least /etc/passwd on $$SDROOTFS"; exit 1; fi
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$*.tar
 	# Fix ownership
-	for f in `find $(source_dirs_root)`; do \
+	for f in `find $(source_dirs_root) -type f`; do \
 		chown 0.0 $$SDROOTFS/$$f; \
 	done
-	rpuser=`egrep '^pi: $$SDROOTFS/etc/passwd | awk -F: '{print $1,$3}'`; \
+	rpuser=`egrep '^pi: $$SDROOTFS/etc/passwd | awk -F: '{print $$3}'`; \
 	for f in `find home/pi`; do \
 		chown -R $$rpuser.$$rpuser $$f; \
 	done
