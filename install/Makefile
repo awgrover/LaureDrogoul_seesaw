@@ -33,7 +33,7 @@ build/rp% : $(sources) ../currentfiles/2* ../currentfiles/1* Makefile
 	# make edits for the wifi
 	sed -i -e '/ wireless-essid / s/Pi./Pi$*/' -e '/ address / s/[^.]\+$$/$*/' $@/etc/network/interfaces.d/adhocpi
 	if [ "$$WIFI" != '' ]; then \
-		mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; \
+		mv $@/etc/network/interfaces.d/$$WIFI $@/etc/network/interfaces.d/$$WIFI.conf; \
 	else \
 		echo "### Did not setup the wifi-once-on-boot network, use env WIFI=xxx to do so"; \
 	fi

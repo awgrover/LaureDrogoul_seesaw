@@ -35,12 +35,12 @@ if [ $UID != 0 ]; then
     echo -n "Which pi: 1|2 "
     read pi
 
-    exit 1
     # Choose the 
-    wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
+    wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."<-".$F[1]." ")' etc/network/interfaces.d/*`
     echo -n "Which wifi at first boot: $wificonf ? "
     read wifi
 
+    rm -rf build/rp$pi rp$pi.tar
     env WIFI=$wifi make rp$pi.tar
 
     # Need to be root for the rest
