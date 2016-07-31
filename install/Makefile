@@ -12,15 +12,32 @@ all : rp1.tar rp2.tar rp3.tar
 
 # rp%.tar : $(sources) Makefile
 rp%.tar : build/rp% Makefile
-	#env PI=$(subst .tar,,$(subst rp,,$@)) make editntarify
+	tar cf -c $< rp$*.tar .
 
 # Copy the source_dirs and edit them
-build/rp% : $(sources) Makefile
+# (might not use actual currentfiles/ if the source_dirs have a newer!)
+build/rp% : $(sources) ../currentfiles/2* ../currentfiles/1* Makefile
+	# clean $@
 	if [ -e $@ ]; then rm -rf $@; fi
 	mkdir -p $@
 	cp -pr $(source_dirs) $@
+	# make edits for the pi# (wifi), and the sound files
+	# make edits for the sound files
+	cd $@/home/pi/fun; rm 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
+	cp ../currentfiles/2* ../currentfiles/1* $@/home/pi/fun
+	cd $@/home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav
+	# make edits for the wifi
+	sed -i -e '/ wireless-essid / s/Pi./Pi$*/' -e '/ address / s/[^.]\+$$/$*/' $@/etc/network/interfaces.d/adhocpi
+	if [ "$$WIFI" != '' ]; then \
+		mv etc/network/interfaces.d/$$WIFI etc/network/interfaces.d/$$WIFI.conf; \
+	else \
+		echo "### Did not setup the wifi-once-on-boot network, use env WIFI=xxx to do so"; \
+	fi
+	echo raspberrypi$* > $@/etc/hostname
+
 	@# make sure the build dir has the correct make-time
 	touch $@
+	chmod -
 
 .PHONY : from
 from :
@@ -28,6 +45,7 @@ from :
 
 # Assume the rest is for the "recusive" make:
 
+# OBS
 .PHONY : editntarify
 editntarify : check $(sources) Makefile edit tarify
 	@echo "---"; echo "DO THIS:"
@@ -48,6 +66,7 @@ config_sd% : $(SDROOTFS) rp%.tar
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected env SDROOTFS=/some-sdrootfs"; exit 1; fi
 	echo "ok: $*" 
 
+# OBS
 .PHONY : copy_to_sd
 copy_to_sd : check $(sources) edit tarify
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected SDROOTFS"; exit 1; fi
@@ -58,11 +77,13 @@ copy_to_sd : check $(sources) edit tarify
 	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
 	find $$SDROOTFS/etc/avahi -type f | xargs chmod 644
 
+# OBS
 .PHONY : check
 check :
 	@if [ "$$PI" == '' ]; then echo "target is internal"; exit 1; fi
 	echo Make: $$PI
 
+# OBS
 .PHONY : tarify
 tarify : $(source_dirs) Makefile
 	tar cf rp$(PI).tar $(source_dirs)
@@ -74,11 +95,12 @@ clean :
 	cd ..; git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
 	cd home/pi/fun; rm -f 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 
-# make edits for the pi# (wifi), and the sound files
+# OBS
 # Sadly, I'm editing the sources, I should make a copy in a "build/"
 .PHONY : edit
 edit :  $(sources) Makefile
 	if [ -e home/pi/fun ]; then rm -rf home/pi/fun; fi; cp -pr ../pi_fun home/pi/fun
+	# make edits for the pi# (wifi), and the sound files
 	cd home/pi/fun; rm 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
 	cd home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav
