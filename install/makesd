@@ -30,9 +30,23 @@ if [ ! -e $dev ]; then
     exit 1
 fi
 
-# Need to be root for most ops...
-
 if [ $UID != 0 ]; then
+    echo -n "Which pi: 1|2 "
+    read pi
+
+    # remove old wifi picks (i.e. any not added to git)
+    echo "Removing non-git etc/network/interfaces.d..."
+    (cd ..; sudo -u `stat -c '%U' .` git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
+
+    # Choose the 
+    wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
+    echo -n "Which wifi at first boot: $wificonf ? "
+    read wifi
+
+    env WIFI=$wifi make rp$pi.tar
+
+    # Need to be root for the rest
+
     # rerun ourselves with env OK, as sudo
     sudo -p 'sudo for disk ops, passwd: ' $0 $init $dev
     exit $?
@@ -86,18 +100,6 @@ fi
 lsblk -f $dev
 
 # Configure
-
-echo -n "Which pi: 1|2 "
-read pi
-
-# remove old wifi picks (i.e. any not added to git)
-echo "Removing non-git etc/network/interfaces.d..."
-(cd ..; sudo -u `stat -c '%U' .` git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
-
-# Choose the 
-wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
-echo -n "Which wifi at first boot: $wificonf ? "
-read wifi
 
 { set -x
 env PI=$pi SDROOTFS=$dir WIFI=$wifi make copy_to_sd
