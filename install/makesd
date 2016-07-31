@@ -40,13 +40,12 @@ if [ $UID != 0 ]; then
     echo -n "Which wifi at first boot: $wificonf ? "
     read wifi
 
-    rm -rf build/rp$pi rp$pi.tar
     env WIFI=$wifi make rp$pi.tar
 
     # Need to be root for the rest
 
     # rerun ourselves with env OK, as sudo
-    sudo -p 'sudo for disk ops, passwd: ' $0 $init $dev
+    sudo -p 'sudo for disk ops, passwd: ' env PI=$pi $0 $init $dev
     exit $?
 fi
 
@@ -55,6 +54,7 @@ echo "rooting.."
 if [ "$init" == "--init" ]; then
     # right device?
     lsblk -f $dev
+    sfdisk -l $dev | & egrep '^/dev'
     echo -n "We are going to rewrite the entire device, ok? yN: "
     read ok
     if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
@@ -65,6 +65,7 @@ if [ "$init" == "--init" ]; then
     # unmount before dd
     if mount -l | grep $dev >/dev/null; then
         echo "unmounting..."
+        # lsblk often shows only known/mounted
         lsblk -l -n -o NAME $dev | xargs --no-run-if-empty -n 1 -ix umount /dev/x
     fi
 
@@ -86,7 +87,12 @@ fi
 
 # Mount
 
-rootfs=/dev/`lsblk -l -o NAME,FSTYPE,TYPE -n $dev | egrep -v ' vfat| disk' | awk '{print $1}'`
+# Try to find the subdev to mount
+rootfs=`sfdisk -l $dev |& egrep '^/dev' | egrep ' Linux$' | awk '{print $1}'`
+if [ "$rootfs" == '' ]; then
+    echo "Couldn't deduce the sub-device of $dev";
+    exit 1
+fi
 dir=/mnt/pimnt
 mkdir -p $dir
 if ! mount -l | grep $dev >/dev/null; then
@@ -94,10 +100,14 @@ if ! mount -l | grep $dev >/dev/null; then
     mount $rootfs $dir 
     }
 fi
+if ! mount -l | grep $dev >/dev/null; then
+    echo "Failed to mount $dev"
+    exit 1
+fi
 lsblk -f $dev
 
 # Configure
 
 { set -x
-env PI=$pi SDROOTFS=$dir WIFI=$wifi make copy_to_sd
+env SDROOTFS=$dir WIFI=$wifi make config_sd$PI
 }
