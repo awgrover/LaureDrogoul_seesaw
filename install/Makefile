@@ -75,11 +75,11 @@ config_sd% : $(SDROOTFS) rp%.tar
 	for f in `find $(source_dirs_root) -type f`; do \
 		chown 0.0 $$SDROOTFS/$$f; \
 	done
-	rpuser=`egrep '^pi: $$SDROOTFS/etc/passwd | awk -F: '{print $$3}'`; \
-	for f in `find home/pi`; do \
-		chown -R $$rpuser.$$rpuser $$f; \
+	rpuser=`egrep '^pi:' $$SDROOTFS/etc/passwd | awk -F: '{print $$3}'`; \
+	for f in `find home/pi -type f`; do \
+		chown $$rpuser.$$rpuser $$f; \
 	done
-	chmod 774 $$SDROOTFS/etc/config_once.conf
+	chmod 774 $$SDROOTFS/etc/init/config_once.conf
 	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
 	find $$SDROOTFS/etc/avahi -type f | xargs chmod 644
 
