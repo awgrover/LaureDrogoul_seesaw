@@ -68,13 +68,17 @@ config_sd :
 config_sd% : $(SDROOTFS) rp%.tar
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected env SDROOTFS=/some-sdrootfs"; exit 1; fi
 	@if [ ! -e rp$*.tar ]; then echo "make the rp$*.tar first (see comments in Makefile)"; exit 1; fi
+	@if [ ! -e $$SDROOTFS/etc/passwd ]; then echo "Expected at least /etc/passwd on $$SDROOTFS"; exit 1; fi
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$*.tar
 	chmod 774 $$SDROOTFS/etc/config_once.conf
 	# Fix ownership
-	for f in $(sources); do
+	for f in `find $source_dirs_root`; do
 		chown 0.0 $$SDROOTFS/$f
 	done
-	rpuser=`grep awgrover $$SDROOTFS/etc/passwd | awk -F: '{print $1,$3}'`
+	rpuser=`egrep '^pi: $$SDROOTFS/etc/passwd | awk -F: '{print $1,$3}'`; \
+	for f in `find home/pi`; do \
+		chown -R $rpuser.$rpuser $f; \
+	done
 	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
 	find $$SDROOTFS/etc/avahi -type f | xargs chmod 644
 
