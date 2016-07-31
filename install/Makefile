@@ -73,11 +73,11 @@ config_sd% : $(SDROOTFS) rp%.tar
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$*.tar
 	# Fix ownership
 	for f in `find $(source_dirs_root)`; do \
-		chown 0.0 $$SDROOTFS/$f; \
+		chown 0.0 $$SDROOTFS/$$f; \
 	done
 	rpuser=`egrep '^pi: $$SDROOTFS/etc/passwd | awk -F: '{print $1,$3}'`; \
 	for f in `find home/pi`; do \
-		chown -R $rpuser.$rpuser $f; \
+		chown -R $$rpuser.$$rpuser $$f; \
 	done
 	chmod 774 $$SDROOTFS/etc/config_once.conf
 	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
