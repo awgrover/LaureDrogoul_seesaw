@@ -1,10 +1,14 @@
+# Makes tars ('all') than can be untarred onto a rootfs to configure it ('copy_to_sd')
+# Uses the sound files ../currentfiles/2*,1*
+
 # internal invocations:
 # env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
+
 source_dirs :=etc root home
 sources := $(shell find $(source_dirs) -type f )
 SHELL := /bin/bash
 
-all : rp1.tar rp2.tar
+all : rp1.tar rp2.tar rp3.tar
 
 %.tar : $(sources) Makefile
 	@# just the 1 | 2:
@@ -24,6 +28,8 @@ editntarify : check $(sources) Makefile edit tarify
 	@echo "apt-get update"
 	@echo "make setup"
 
+# Untar onto a rootfs, so it should be ready to boot
+# assumes a rootfs at $SDROOTFS, untars onto it, and does some other config
 .PHONY : copy_to_sd
 copy_to_sd : check $(sources) edit tarify
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected SDROOTFS"; exit 1; fi
@@ -47,12 +53,14 @@ tarify : $(source_dirs) Makefile
 .PHONE : clean
 clean : 
 	git checkout HEAD etc/network/interfaces.d
-	cd ..; git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
+	cd ..; git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
 	cd home/pi/fun; rm -f 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 
+# make edits for the pi# (wifi), and the sound files
+# Sadly, I'm editing the sources, I should make a copy in a "build/"
 .PHONY : edit
 edit :  $(sources) Makefile
-	cp -pr ../pi_fun home/pi/fun
+	if [ -e home/pi/fun ]; then rm -rf home/pi/fun; fi; cp -pr ../pi_fun home/pi/fun
 	cd home/pi/fun; rm 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
 	cp ../currentfiles/2* ../currentfiles/1* home/pi/fun
 	cd home/pi/fun; ln -s 2*.wav seesawsound2.wav; ln -s 1*.wav seesawsound.wav

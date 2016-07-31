@@ -1,14 +1,26 @@
 #!/bin/bash
-set -e
-dev=$1
+# Copy the image & setup: pi#, wifi 
+# --- [/dev/microsdwholedevice] # just (re)-configure
+# --- --init [dev] # dd the image
+# Needs sudo
 
 img=2015-02-16-raspbian-wheezy.img
+
+set -e
+
 if [ ! -e $img ]; then
     echo "There is no (assumed img) $img"
     exit 1
 fi
 
-if [ "$1" == "" ]; then
+init=''
+if [ "$1" == "--init" ]; then
+    init=1
+    shift
+fi
+
+dev=$1
+if [ "$dev" == "" ]; then
     # it was...
     dev=/dev/mmcblk0
 fi
@@ -18,30 +30,34 @@ if [ ! -e $dev ]; then
     exit 1
 fi
 
+# Need to be root for most ops...
+
 if [ $UID != 0 ]; then
-    sudo -p 'sudo for disk ops, passwd: ' env OK=1 $0 $dev
+    # rerun ourselves with env OK, as sudo
+    sudo -p 'sudo for disk ops, passwd: ' $0 $dev
     exit $?
 fi
 
-if [ "$1" == "--init" ]; then
-    if [ "$OK" == '' ]; then
-        lsblk -f $dev
-        echo -n "We are going to rewrite the entire device, ok? yN: "
-        read ok
-        if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
-            echo "aborted"
-            exit 2
-        fi
+echo "rooting.."
+
+if [ "$init" == "1" ]; then
+    # right device?
+    lsblk -f $dev
+    echo -n "We are going to rewrite the entire device, ok? yN: "
+    read ok
+    if [[ "$ok" != 'y' && $ok != 'Y' ]]; then
+        echo "aborted"
+        exit 2
     fi
 
-    echo "rooting.."
-
+    # unmount before dd
     if mount -l | grep $dev >/dev/null; then
         echo "unmounting..."
         lsblk -l -n -o NAME | xargs --no-run-if-empty -n 1 -ix umount /dev/x
     fi
 
-    args="dd status=progress bs=4M if=$img of=$dev"
+    # copy image
+    args="dd bs=4M if=$img of=$dev"
     echo
     echo $args
     echo -n "Confirm that yN: "
@@ -52,29 +68,37 @@ if [ "$1" == "--init" ]; then
     fi
     $args
 
+    # should show more info
     lsblk -f /dev/mmcblk0
 fi
 
 
 # Mount
 
-set -x
 rootfs=/dev/`lsblk -l -o NAME,FSTYPE,TYPE -n $dev | egrep -v ' vfat| disk' | awk '{print $1}'`
 dir=/mnt/pimnt
 mkdir -p $dir
 if ! mount -l | grep $dev >/dev/null; then
-    mount $rootfs $dir
+    { set -x 
+    mount $rootfs $dir 
+    }
 fi
 lsblk -f $dev
+
+# Configure
 
 echo -n "Which pi: 1|2 "
 read pi
 
-# remove old wifi picks
-(cd ..; sudo -u `stat -c '%U' .` git status --porcelain install/etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
+# remove old wifi picks (i.e. any not added to git)
+echo "Removing non-git etc/network/interfaces.d..."
+(cd ..; sudo -u `stat -c '%U' .` git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $2}' | xargs --no-run-if-empty rm)
 
+# Choose the 
 wificonf=`perl -an -e 'use File::Basename; /^\s+wpa-ssid/ && (print basename($ARGV)."/".$F[1]." ")' etc/network/interfaces.d/*`
 echo -n "Which wifi at first boot: $wificonf ? "
 read wifi
 
+{ set -x
 env PI=$pi SDROOTFS=$dir WIFI=$wifi make copy_to_sd
+}
