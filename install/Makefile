@@ -10,9 +10,17 @@ SHELL := /bin/bash
 
 all : rp1.tar rp2.tar rp3.tar
 
-%.tar : $(sources) Makefile
-	@# just the 1 | 2:
-	env PI=$(subst .tar,,$(subst rp,,$@)) make editntarify
+# rp%.tar : $(sources) Makefile
+rp%.tar : build/rp% Makefile
+	#env PI=$(subst .tar,,$(subst rp,,$@)) make editntarify
+
+# Copy the source_dirs and edit them
+build/rp% : $(sources) Makefile
+	if [ -e $@ ]; then rm -rf $@; fi
+	mkdir -p $@
+	cp -pr $(source_dirs) $@
+	@# make sure the build dir has the correct make-time
+	touch $@
 
 .PHONY : from
 from :
@@ -28,8 +36,18 @@ editntarify : check $(sources) Makefile edit tarify
 	@echo "apt-get update"
 	@echo "make setup"
 
+
 # Untar onto a rootfs, so it should be ready to boot
 # assumes a rootfs at $SDROOTFS, untars onto it, and does some other config
+.PHONY : config_sd
+config_sd :
+	@echo "Need a pi # for config_sdn"
+
+.PHONY : config_sd%
+config_sd% : $(SDROOTFS) rp%.tar
+	@if [ "$$SDROOTFS" == '' ]; then echo "Expected env SDROOTFS=/some-sdrootfs"; exit 1; fi
+	echo "ok: $*" 
+
 .PHONY : copy_to_sd
 copy_to_sd : check $(sources) edit tarify
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected SDROOTFS"; exit 1; fi
