@@ -1,5 +1,6 @@
 # Makes tars ('all') than can be untarred onto a rootfs to configure it ('copy_to_sd')
 # Uses the sound files ../currentfiles/2*,1*
+# env WIFI=once_wificonfigname SDROOTFS=/mnt/somesdrootfs --- 
 
 # internal invocations:
 # env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
@@ -37,7 +38,6 @@ build/rp% : $(sources) ../currentfiles/2* ../currentfiles/1* Makefile
 
 	@# make sure the build dir has the correct make-time
 	touch $@
-	chmod -
 
 .PHONY : from
 from :
@@ -88,12 +88,9 @@ check :
 tarify : $(source_dirs) Makefile
 	tar cf rp$(PI).tar $(source_dirs)
 
-# Especially after copy_to_sd (: edit)
 .PHONE : clean
 clean : 
-	git checkout HEAD etc/network/interfaces.d
-	cd ..; git status --porcelain etc/network/interfaces.d | grep '?' | awk '{print $$2}' | xargs --no-run-if-empty rm
-	cd home/pi/fun; rm -f 2*.wav seesawsound2.wav 1*.wav seesawsound.wav 2>/dev/null || true
+	rm -rf build
 
 # OBS
 # Sadly, I'm editing the sources, I should make a copy in a "build/"
