@@ -1,7 +1,7 @@
-# Makes tars ('all') than can be untarred onto a rootfs to configure it ('copy_to_sd')
+# Makes tars ('all') than can be untarred onto a rootfs to configure it ('config_sd')
 # Uses the sound files ../currentfiles/2*,1*
-# env WIFI=once_wificonfigname rp$n.tar
-# sudo env SDROOTFS=/mnt/somesdrootfs copy_to_sd$n
+# env WIFI=once_wificonfigname rp$n.tar # clean if you change WIFI
+# sudo env SDROOTFS=/mnt/somesdrootfs config_sd$n # to edit the rootfs with the config for pi$n
 
 # internal invocations:
 # env PI=1|2 SDROOTFS=/mnt/$thesdrootfs
@@ -60,12 +60,12 @@ obs1 : $(sources) Makefile
 
 # Untar onto a rootfs, so it should be ready to boot
 # assumes a rootfs at $SDROOTFS, untars onto it, and does some other config
-.PHONY : copy_to_sd
-copy_to_sd :
-	@echo "Need a pi # for copy_to_sdn"
+.PHONY : config_sd
+config_sd :
+	@echo "Need a pi # for config_sdn"
 
-.PHONY : copy_to_sd%
-copy_to_sd% : $(SDROOTFS) rp%.tar
+.PHONY : config_sd%
+config_sd% : $(SDROOTFS) rp%.tar
 	@if [ "$$SDROOTFS" == '' ]; then echo "Expected env SDROOTFS=/some-sdrootfs"; exit 1; fi
 	@if [ ! -e rp$*.tar ]; then echo "make the rp$*.tar first (see comments in Makefile)"; exit 1; fi
 	cd $$SDROOTFS && tar xf $(CURDIR)/rp$*.tar
@@ -74,7 +74,7 @@ copy_to_sd% : $(SDROOTFS) rp%.tar
 	for f in $(sources); do
 		chown 0.0 $$SDROOTFS/$f
 	done
-	chown -R 0.0 $$SDROOTFS/etc/avahi
+	rpuser=`grep awgrover $$SDROOTFS/etc/passwd | awk -F: '{print $1,$3}'`
 	find $$SDROOTFS/etc/avahi -type d | xargs chmod 755
 	find $$SDROOTFS/etc/avahi -type f | xargs chmod 644
 
